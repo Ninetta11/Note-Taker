@@ -29,12 +29,55 @@ app.get("/", function (req, res) {
 // =============================================================
 // Returns all saved notes from database
 app.get("/api/notes", function (req, res) {
-    res.send("db.json");
+    return res.json("db.json");
 })
 
 // Receive new note and add to database
 app.post("/api/notes", function (req, res) {
-    const newNote = req.body;
+    let newNote = req.body;
+    // add id to note prior to saving
+    let notes = readNotes();
+    let index = "";
+    if (lastIndexOf(notes) === -1) {
+        index = 1;
+    }
+    else {
+        index = lastIndexOf(notes) + 1;
+    }
+    newNote.id = index;
+    // save note to database 
+    fs.appendFile("db.json", newNote, (err) => {
+        if (err) throw err;
+        res.send("db.json")
+    })
+})
 
-    res.send("db.json")
-}) 
+// Deletes note from database
+app.delete("api/notes/:id", function (req, res) {
+    let id = req.params.id;
+    // Reads all notes
+    let notes = readNotes();
+    // Identifies note to be deleted inside of database
+    let deleteNote = notes.findIndex(note => note.id === id);
+    // deletes note from notes 
+    notes.splice(deleteNote);
+    // Writes remaining notes back to database
+    fs.writeFile("db.json", notes, (err) => {
+        if (err) throw err;
+    })
+})
+
+// Read existing database file
+function readNotes() {
+    let notes = fs.readFile("db.json", (err, data) => {
+        if (err) throw err;
+        return data;
+    })
+    return notes;
+}
+
+// Starts the server to begin listening
+// =============================================================
+app.listen(PORT, function () {
+    console.log("App listening on PORT " + PORT);
+});
