@@ -16,22 +16,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
-
-const notes = [];
-
-// Read existing database file
-function readNotes() {
-    fs.readFileSync((data), (err, data) => {
-        if (err) throw err;
-        return data;
-    })
-}
-
 // generate unique ID
 function generateNewId() {
     let idIndex = Math.floor(Math.random() * 9999) + 1;
     //if (notes.length >= 1) {
-    if (notes.forEach(element => element.id === idIndex)) {
+    if (data.forEach(element => element.id === idIndex)) {
         idIndex = generateNewId()
     }
     // }
@@ -56,27 +45,27 @@ app.get("/api/notes", function (req, res) {
 app.post("/api/notes", function (req, res) {
     let newNote = req.body;
     newNote.id = `${generateNewId()}`;
-    notes.push(newNote);
-    fs.writeFileSync(database, JSON.stringify(notes), (err) => {
+    data.push(newNote);
+    fs.writeFileSync(database, JSON.stringify(data), (err) => {
         if (err) throw err;
     })
-    res.json(notes);
+    res.json(data);
 })
 
 // Deletes note from database
-app.delete("api/notes/:id", function (req, res) {
-    let id = parseInt(req.params.id);
-    // Reads all notes
-    notes = readNotes();
-    // Identifies note to be deleted inside of database
-    let deleteNote = notes.filter(note => note.id === id);
-    // deletes note from notes 
-    notes.splice(deleteNote);
-    // Writes remaining notes back to database
-    fs.writeFileSync(database, notes, (err) => {
-        if (err) throw err;
-    })
-    res.json(notes);
+app.delete("/api/notes/:id", function (req, res) {
+    let id = req.params.id;
+    //Identifies note to be deleted inside of database
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].id === id) {
+            data.splice(i, 1);
+            // Writes remaining notes back to database
+            fs.writeFileSync(database, JSON.stringify(data), (err) => {
+                if (err) throw err;
+            })
+            res.send(data[i]);
+        }
+    }
 })
 
 // Basic route that sends the user first to the index page
