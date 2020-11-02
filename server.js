@@ -1,25 +1,27 @@
 // Dependencies
 // =============================================================
-var express = require("express");
-var path = require("path");
+const express = require("express");
+const path = require("path");
 const fs = require("fs");
+const data = require("./db/db.json");
+const database = "db/db.json";
 
 // Sets up the Express App
 // =============================================================
-var app = express();
-var PORT = 3001;
+const app = express();
+const PORT = 8001;
 
 // Sets up the Express app to handle data parsing
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
-const database = "db/db.json";
+
 const notes = [];
 
 // Read existing database file
 function readNotes() {
-    fs.readFile((database), (err, data) => {
+    fs.readFileSync((data), (err, data) => {
         if (err) throw err;
         return data;
     })
@@ -47,8 +49,7 @@ app.get("/notes", function (req, res) {
 // =============================================================
 // Returns all saved notes from database
 app.get("/api/notes", function (req, res) {
-    let savedNotes = readNotes();
-    res.json(savedNotes);
+    res.json(data);
 })
 
 // Receive new note and add to database
@@ -56,7 +57,7 @@ app.post("/api/notes", function (req, res) {
     let newNote = req.body;
     newNote.id = `${generateNewId()}`;
     notes.push(newNote);
-    fs.writeFile(database, JSON.stringify(notes), (err) => {
+    fs.writeFileSync(database, JSON.stringify(notes), (err) => {
         if (err) throw err;
     })
     res.json(notes);
@@ -72,7 +73,7 @@ app.delete("api/notes/:id", function (req, res) {
     // deletes note from notes 
     notes.splice(deleteNote);
     // Writes remaining notes back to database
-    fs.writeFile(database, notes, (err) => {
+    fs.writeFileSync(database, notes, (err) => {
         if (err) throw err;
     })
     res.json(notes);
